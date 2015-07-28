@@ -83,6 +83,10 @@ public class Main
                             inputLine.replace("Label><text>", "Label><text>" + String.valueOf(chapterNumber++) + ". "))
                       .append("\n");
                 }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
             }
         }
         try (BufferedWriter bw = Files.newBufferedWriter(tocNcxFile.toPath()))
