@@ -53,10 +53,10 @@ public class Main
                 }
                 else
                 {
-                    File tocNcxFile = oebps.toPath().resolve("toc.ncx").toFile();
+                    File tocNcxFile = oebps.toPath().resolve("toc.xhtml").toFile();
                     if (!(tocNcxFile.exists() && tocNcxFile.isFile()))
                     {
-                        JOptionPane.showMessageDialog(null, "toc.ncx file could not be resolved!");
+                        JOptionPane.showMessageDialog(null, "toc.xhtml file could not be resolved!");
                     }
                     else
                     {
@@ -72,15 +72,14 @@ public class Main
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
-        int chapterNumber = 1;
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocNcxFile), "UTF8")))
         {
             while ((inputLine = in.readLine()) != null)
             {
-                if (inputLine.contains("Label><text>"))
+                if (inputLine.contains("idParaDest"))
                 {
                     sb.append(
-                            inputLine.replace("Label><text>", "Label><text>" + String.valueOf(chapterNumber++) + ". "))
+                            inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">$1. "))
                       .append("\n");
                 }
                 else
