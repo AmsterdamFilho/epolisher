@@ -53,14 +53,14 @@ public class Main
                 }
                 else
                 {
-                    File tocNcxFile = oebps.toPath().resolve("toc.xhtml").toFile();
-                    if (!(tocNcxFile.exists() && tocNcxFile.isFile()))
+                    File tocFile = oebps.toPath().resolve("toc.xhtml").toFile();
+                    if (!(tocFile.exists() && tocFile.isFile()))
                     {
                         JOptionPane.showMessageDialog(null, "toc.xhtml file could not be resolved!");
                     }
                     else
                     {
-                        return tocNcxFile;
+                        return tocFile;
                     }
                 }
             }
@@ -68,11 +68,11 @@ public class Main
         return null;
     }
 
-    private static void addChapterNumbers (File tocNcxFile) throws Exception
+    private static void addChapterNumbers (File tocFile) throws Exception
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocNcxFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -88,7 +88,7 @@ public class Main
                 }
             }
         }
-        try (BufferedWriter bw = Files.newBufferedWriter(tocNcxFile.toPath()))
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
         {
             bw.write(sb.toString());
         }
