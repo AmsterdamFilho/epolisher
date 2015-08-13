@@ -140,7 +140,7 @@ public class Main
                             sb.append("\t\t\t\t\t<p class=\"Texto\">---Notas de rodapé---</p>").append("\n");
                             sb.append("\t\t\t\t</aside>\n");
                         }
-                        else if (inputLine.contains("class=\"Rodape\""))
+                        else if (inputLine.contains("class=\"Texto\"") && inputLine.contains("footnote"))
                         {
                             sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(footNoteCount) + ". ")).append("\n");
                             footNoteCount++;
