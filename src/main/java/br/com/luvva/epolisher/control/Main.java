@@ -7,13 +7,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * @author Lima Filho, A. L. - amsterdam@luvva.com.br
  */
 public class Main
 {
-
 
     public static void main (String[] args)
     {
@@ -34,7 +37,14 @@ public class Main
             }
             try
             {
-                Files.walkFileTree(oebpsPath, new FootnoteFileVisitor());
+                FootnoteFileVisitor visitor = new FootnoteFileVisitor();
+                Files.walkFileTree(oebpsPath, visitor);
+                int footnoteCount = 0;
+                List<Path> sortedPaths = visitor.getSortedPaths();
+                for (Path sortedPath : sortedPaths)
+                {
+                    footnoteCount = polishFootnote(sortedPath, footnoteCount);
+                }
             }
             catch (IOException e)
             {
@@ -120,44 +130,76 @@ public class Main
     private static class FootnoteFileVisitor extends SimpleFileVisitor<Path>
     {
 
-        private int footNoteCount = 1;
+        private final List<Path> paths = new ArrayList<>();
 
         @Override
         public FileVisitResult visitFile (Path path, BasicFileAttributes attrs) throws IOException
         {
             if (!attrs.isDirectory() && path.toString().toLowerCase().endsWith(".xhtml"))
             {
-                String inputLine;
-                StringBuilder sb = new StringBuilder();
-                try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()), "UTF8")))
-                {
-                    while ((inputLine = in.readLine()) != null)
-                    {
-                        if (inputLine.contains("<div class=\"_idFootnotes\">"))
-                        {
-                            sb.append(inputLine).append("\n");
-                            sb.append("\t\t\t\t<aside class=\"_idFootnote\" epub:type=\"footnote\">\n");
-                            sb.append("\t\t\t\t\t<p class=\"Texto\">---Notas de rodapé---</p>").append("\n");
-                            sb.append("\t\t\t\t</aside>\n");
-                        }
-                        else if (inputLine.contains("class=\"Texto\"") && inputLine.contains("footnote"))
-                        {
-                            sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(footNoteCount) + ". ")).append("\n");
-                            footNoteCount++;
-                        }
-                        else
-                        {
-                            sb.append(inputLine).append("\n");
-                        }
-                    }
-                }
-                try (BufferedWriter bw = Files.newBufferedWriter(path))
-                {
-                    bw.write(sb.toString());
-                }
+                paths.add(path);
             }
             return FileVisitResult.CONTINUE;
         }
+
+        private List<Path> getSortedPaths ()
+        {
+            Collections.sort(paths, new ChapterFileSorter());
+            return paths;
+        }
+    }
+
+    private static class ChapterFileSorter implements Comparator<Path>
+    {
+        @Override
+        public int compare (Path o1, Path o2)
+        {
+            return Integer.compare(getIndexFromPath(o1), getIndexFromPath(o2));
+        }
+
+        private int getIndexFromPath (Path path)
+        {
+            String name = path.toFile().getName();
+            name = name.replace(".xhtml", "");
+            if (name.matches(".+\\-[0-9]+"))
+            {
+                return Integer.valueOf(name.substring(name.lastIndexOf('-') + 1));
+            }
+            return 0;
+        }
+
+    }
+
+    private static int polishFootnote (Path path, int footNoteCount) throws IOException
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("<div class=\"_idFootnotes\">"))
+                {
+                    sb.append(inputLine).append("\n");
+                    sb.append("\t\t\t\t<aside class=\"_idFootnote\" epub:type=\"footnote\">\n");
+                    sb.append("\t\t\t\t\t<p class=\"Texto\">---Notas de rodapé---</p>").append("\n");
+                    sb.append("\t\t\t\t</aside>\n");
+                }
+                else if (inputLine.contains("class=\"Rodape\""))
+                {
+                    sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount) + ". ")).append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(path))
+        {
+            bw.write(sb.toString());
+        }
+        return footNoteCount;
     }
 
 }
