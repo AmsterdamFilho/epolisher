@@ -18,6 +18,8 @@ import java.util.List;
 public class Main
 {
 
+    private static final String INFANCIA_DE_JESUS = "A Infância de Jesus";
+
     public static void main (String[] args)
     {
         Path oebpsPath = getOEBPSPath(args);
@@ -26,9 +28,29 @@ public class Main
             File tocFile = getTocFile(oebpsPath);
             if (tocFile != null)
             {
+                String obra = null;
                 try
                 {
-                    addChapterNumbers(tocFile);
+                    obra = getObra(tocFile);
+                    if (obra == null)
+                    {
+                        throw new NullPointerException();
+                    }
+                }
+                catch (Exception e)
+                {
+                    JOptionPane.showMessageDialog(null, "Error getting book name: " + e.getMessage());
+                }
+                try
+                {
+                    switch (obra)
+                    {
+                        case INFANCIA_DE_JESUS:
+                            addChapterNumbersInfancia(tocFile);
+                            break;
+                        default:
+                            addChapterNumbers(tocFile);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -51,6 +73,22 @@ public class Main
                 JOptionPane.showMessageDialog(null, "Error editing footnotes: " + e.getMessage());
             }
         }
+    }
+
+    private static String getObra (File tocFile) throws Exception
+    {
+        String inputLine;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.matches("\t\t<title>.+</title>"))
+                {
+                    return inputLine.replace("</title>", "").replace("<title>", "").replace("\t", "");
+                }
+            }
+        }
+        return null;
     }
 
     private static Path getOEBPSPath (String[] args)
@@ -99,6 +137,33 @@ public class Main
             return tocFile;
         }
         return null;
+    }
+
+    private static void addChapterNumbersInfancia (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int cap = 1;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest") && !inputLine.contains("Preâmbulo"))
+                {
+                    sb.append(
+                            inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
+                      .append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
     }
 
     private static void addChapterNumbers (File tocFile) throws Exception
@@ -182,12 +247,12 @@ public class Main
                 {
                     sb.append(inputLine).append("\n");
                     sb.append("\t\t\t\t<aside class=\"_idFootnote\" epub:type=\"footnote\">\n");
-                    sb.append("\t\t\t\t\t<p class=\"Texto\">---Notas de rodapé---</p>").append("\n");
+                    sb.append("\t\t\t\t\t<p class=\"Epub-texto\">---Notas de rodapé---</p>").append("\n");
                     sb.append("\t\t\t\t</aside>\n");
                 }
-                else if (inputLine.contains("class=\"Rodape\""))
+                else if (inputLine.contains("class=\"Epub-rodape\""))
                 {
-                    sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount) + ". ")).append("\n");
+                    sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount))).append("\n");
                 }
                 else
                 {
