@@ -252,7 +252,14 @@ public class Main
                 }
                 else if (inputLine.contains("class=\"Epub-rodape\""))
                 {
-                    sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount))).append("\n");
+                    if (inputLine.contains("</a>. "))
+                    {
+                        sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount))).append("\n");
+                    }
+                    else
+                    {
+                        sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount) + ". ")).append("\n");
+                    }
                 }
                 else
                 {
