@@ -19,6 +19,7 @@ public class Main
 {
 
     private static final String INFANCIA_DE_JESUS = "A Infância de Jesus";
+    private static final String ROBERTO_BLUM_II = "Roberto Blum (Volume II)";
 
     public static void main (String[] args)
     {
@@ -47,6 +48,9 @@ public class Main
                     {
                         case INFANCIA_DE_JESUS:
                             addChapterNumbersInfancia(tocFile);
+                            break;
+                        case ROBERTO_BLUM_II:
+                            addChapterNumbersBlumII(tocFile);
                             break;
                         default:
                             addChapterNumbers(tocFile);
@@ -149,6 +153,33 @@ public class Main
             while ((inputLine = in.readLine()) != null)
             {
                 if (inputLine.contains("idParaDest") && !inputLine.contains("Preâmbulo"))
+                {
+                    sb.append(
+                            inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
+                      .append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
+    private static void addChapterNumbersBlumII (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int cap = 151;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest"))
                 {
                     sb.append(
                             inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
