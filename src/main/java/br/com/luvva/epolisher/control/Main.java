@@ -18,8 +18,9 @@ import java.util.List;
 public class Main
 {
 
-    private static final String INFANCIA_DE_JESUS = "A Infância de Jesus";
-    private static final String ROBERTO_BLUM_II = "Roberto Blum (Volume II)";
+    private static final String CD_I  = "A Criação de Deus (Volume I)";
+    private static final String IJ    = "A Infância de Jesus";
+    private static final String RB_II = "Roberto Blum (Volume II)";
 
     public static void main (String[] args)
     {
@@ -29,27 +30,27 @@ public class Main
             File tocFile = getTocFile(oebpsPath);
             if (tocFile != null)
             {
-                String obra = null;
+                String bookTitle;
                 try
                 {
-                    obra = getObra(tocFile);
-                    if (obra == null)
-                    {
-                        throw new NullPointerException();
-                    }
+                    bookTitle = getBookTitle(tocFile);
                 }
                 catch (Exception e)
                 {
-                    JOptionPane.showMessageDialog(null, "Error getting book name: " + e.getMessage());
+                    JOptionPane.showMessageDialog(null, "Error getting bookTitle name: " + e.getMessage());
+                    return;
                 }
                 try
                 {
-                    switch (obra)
+                    switch (bookTitle)
                     {
-                        case INFANCIA_DE_JESUS:
+                        case CD_I:
+                            addChapterNumbersCD_I(tocFile);
+                            break;
+                        case IJ:
                             addChapterNumbersInfancia(tocFile);
                             break;
-                        case ROBERTO_BLUM_II:
+                        case RB_II:
                             addChapterNumbersBlumII(tocFile);
                             break;
                         default:
@@ -79,7 +80,7 @@ public class Main
         }
     }
 
-    private static String getObra (File tocFile) throws Exception
+    private static String getBookTitle (File tocFile) throws Exception
     {
         String inputLine;
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
@@ -92,21 +93,21 @@ public class Main
                 }
             }
         }
-        return null;
+        throw new NullPointerException("Could not find book's title!");
     }
 
     private static Path getOEBPSPath (String[] args)
     {
         if (args.length == 0)
         {
-            JOptionPane.showMessageDialog(null, "Especify Epub directory for polishment!");
+            JOptionPane.showMessageDialog(null, "Specify Epub directory for polishment!");
         }
         else
         {
             File epubDirectory = new File(args[0]);
             if (!epubDirectory.exists())
             {
-                JOptionPane.showMessageDialog(null, "Especified Epub directory does not exist!");
+                JOptionPane.showMessageDialog(null, "Specified Epub directory does not exist!");
             }
             else if (!epubDirectory.isDirectory())
             {
@@ -143,6 +144,32 @@ public class Main
         return null;
     }
 
+    private static void addChapterNumbersCD_I (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int cap = 1;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest") && !inputLine.contains("PRÓLOGO DO SENHOR") && !inputLine.contains("APÊNDICE"))
+                {
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
+                      .append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
     private static void addChapterNumbersInfancia (File tocFile) throws Exception
     {
         String inputLine;
@@ -154,8 +181,7 @@ public class Main
             {
                 if (inputLine.contains("idParaDest") && !inputLine.contains("Preâmbulo"))
                 {
-                    sb.append(
-                            inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
                       .append("\n");
                 }
                 else
@@ -181,8 +207,7 @@ public class Main
             {
                 if (inputLine.contains("idParaDest"))
                 {
-                    sb.append(
-                            inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
                       .append("\n");
                 }
                 else
@@ -208,7 +233,7 @@ public class Main
                 if (inputLine.contains("idParaDest"))
                 {
                     sb.append(
-                            inputLine.replaceAll("idParaDest\\-([0-9]+)\">", "idParaDest\\-$1\">$1. "))
+                            inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">$1. "))
                       .append("\n");
                 }
                 else
@@ -257,7 +282,7 @@ public class Main
         {
             String name = path.toFile().getName();
             name = name.replace(".xhtml", "");
-            if (name.matches(".+\\-[0-9]+"))
+            if (name.matches(".+-[0-9]+"))
             {
                 return Integer.valueOf(name.substring(name.lastIndexOf('-') + 1));
             }
