@@ -2,15 +2,9 @@ package br.com.luvva.epolisher.control;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Lima Filho, A. L. - amsterdam@luvva.com.br
@@ -20,6 +14,7 @@ public class Main
 
     private static final String CD_I  = "A Criação de Deus (Volume I)";
     private static final String IJ    = "A Infância de Jesus";
+    private static final String MP    = "Mensagens do Pai";
     private static final String RB_II = "Roberto Blum (Volume II)";
 
     public static void main (String[] args)
@@ -50,6 +45,10 @@ public class Main
                         case IJ:
                             addChapterNumbersInfancia(tocFile);
                             break;
+                        case MP:
+                            fixIndex(tocFile);
+                            fixAllPageTitlesMP(oebpsPath);
+                            break;
                         case RB_II:
                             addChapterNumbersBlumII(tocFile);
                             break;
@@ -77,6 +76,88 @@ public class Main
             {
                 JOptionPane.showMessageDialog(null, "Error editing footnotes: " + e.getMessage());
             }
+        }
+    }
+
+    private static void fixAllPageTitlesMP (Path oebpsPath)
+    {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(oebpsPath))
+        {
+            for (Path chapterFile : stream)
+            {
+                if (chapterFile.getFileName().toString().startsWith("MP-epub"))
+                {
+                    String inputLine;
+                    StringBuilder sb = new StringBuilder();
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(chapterFile.toFile()), "UTF8")))
+                    {
+                        while ((inputLine = in.readLine()) != null)
+                        {
+                            if (inputLine.contains("Epub-TitCapIndice"))
+                            {
+                                StringBuilder sb1 = new StringBuilder();
+                                boolean reachedATag = false;
+                                boolean reachedSecondTrace = false;
+                                boolean reachedFirstTrace = false;
+                                for (int i = 0; i < inputLine.length(); i++)
+                                {
+                                    String currentChar = inputLine.substring(i, i + 1);
+                                    if (reachedATag && Objects.equals("/", currentChar))
+                                    {
+                                        sb1.append("/a></p>");
+                                        break;
+                                    }
+                                    if (reachedATag && !Objects.equals("/", currentChar))
+                                    {
+                                        sb1.append(currentChar);
+                                        continue;
+                                    }
+                                    if (reachedSecondTrace && Objects.equals("<", currentChar))
+                                    {
+                                        sb1.append(currentChar);
+                                        reachedATag = true;
+                                        continue;
+                                    }
+                                    if (reachedSecondTrace && !Objects.equals("<", currentChar))
+                                    {
+                                        continue;
+                                    }
+                                    if (Objects.equals("–", currentChar))
+                                    {
+                                        if (reachedFirstTrace)
+                                        {
+                                            reachedSecondTrace = true;
+                                            sb1.append(currentChar);
+                                        }
+                                        else
+                                        {
+                                            reachedFirstTrace = true;
+                                            sb1.append(currentChar);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        sb1.append(currentChar);
+                                    }
+                                }
+                                sb.append(sb1).append("\n");
+                            }
+                            else
+                            {
+                                sb.append(inputLine).append("\n");
+                            }
+                        }
+                    }
+                    try (BufferedWriter bw = Files.newBufferedWriter(chapterFile))
+                    {
+                        bw.write(sb.toString());
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            JOptionPane.showMessageDialog(null, e.getMessage());
         }
     }
 
@@ -153,10 +234,37 @@ public class Main
         {
             while ((inputLine = in.readLine()) != null)
             {
-                if (inputLine.contains("idParaDest") && !inputLine.contains("PRÓLOGO DO SENHOR") && !inputLine.contains("APÊNDICE"))
+                if (inputLine.contains("idParaDest") && !inputLine.contains("PRÓLOGO DO SENHOR") && !inputLine
+                        .contains("APÊNDICE"))
                 {
-                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
-                      .append("\n");
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf
+                            (cap++) + ". "))
+                            .append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
+    private static void fixIndex (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int cap = 1;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest"))
+                {
+                    sb.append(inputLine.replaceAll(">– ([0-9]+) –", ">$1. ")).append("\n");
                 }
                 else
                 {
@@ -181,8 +289,9 @@ public class Main
             {
                 if (inputLine.contains("idParaDest") && !inputLine.contains("Preâmbulo"))
                 {
-                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
-                      .append("\n");
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf
+                            (cap++) + ". "))
+                            .append("\n");
                 }
                 else
                 {
@@ -207,8 +316,9 @@ public class Main
             {
                 if (inputLine.contains("idParaDest"))
                 {
-                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf(cap++) + ". "))
-                      .append("\n");
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf
+                            (cap++) + ". "))
+                            .append("\n");
                 }
                 else
                 {
@@ -234,7 +344,7 @@ public class Main
                 {
                     sb.append(
                             inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">$1. "))
-                      .append("\n");
+                            .append("\n");
                 }
                 else
                 {
@@ -314,7 +424,8 @@ public class Main
                     }
                     else
                     {
-                        sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount) + ". ")).append("\n");
+                        sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount) + ". ")).append
+                                ("\n");
                     }
                 }
                 else
