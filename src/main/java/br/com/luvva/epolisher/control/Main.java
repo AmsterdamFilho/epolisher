@@ -12,10 +12,11 @@ import java.util.*;
 public class Main
 {
 
-    private static final String CD_I  = "A Criação de Deus (Volume I)";
-    private static final String IJ    = "A Infância de Jesus";
-    private static final String MP    = "Mensagens do Pai";
-    private static final String RB_II = "Roberto Blum (Volume II)";
+    private static final String CD_I   = "A Criação de Deus (Volume I)";
+    private static final String CD_III = "A Criação de Deus (Volume III)";
+    private static final String IJ     = "A Infância de Jesus";
+    private static final String MP     = "Mensagens do Pai";
+    private static final String RB_II  = "Roberto Blum (Volume II)";
 
     public static void main (String[] args)
     {
@@ -41,6 +42,9 @@ public class Main
                     {
                         case CD_I:
                             addChapterNumbersCD_I(tocFile);
+                            break;
+                        case CD_III:
+                            addChapterNumbersCD_III(tocFile);
                             break;
                         case IJ:
                             addChapterNumbersInfancia(tocFile);
@@ -89,7 +93,8 @@ public class Main
                 {
                     String inputLine;
                     StringBuilder sb = new StringBuilder();
-                    try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(chapterFile.toFile()), "UTF8")))
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(chapterFile
+                            .toFile()), "UTF8")))
                     {
                         while ((inputLine = in.readLine()) != null)
                         {
@@ -236,6 +241,33 @@ public class Main
             {
                 if (inputLine.contains("idParaDest") && !inputLine.contains("PRÓLOGO DO SENHOR") && !inputLine
                         .contains("APÊNDICE"))
+                {
+                    sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf
+                            (cap++) + ". "))
+                            .append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
+    private static void addChapterNumbersCD_III (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int cap = 1;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest") && !inputLine.contains("ANEXO – A FORMAÇÃO"))
                 {
                     sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf
                             (cap++) + ". "))
