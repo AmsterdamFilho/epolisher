@@ -11,11 +11,11 @@ import java.util.*;
  */
 public class Main
 {
-
     private static final String CD_I   = "A Criação de Deus (Volume I)";
     private static final String CD_III = "A Criação de Deus (Volume III)";
     private static final String IJ     = "A Infância de Jesus";
     private static final String MP     = "Mensagens do Pai";
+    private static final String EXP    = "Explicações de Textos das Escrituras Sagradas";
     private static final String RB_II  = "Roberto Blum (Volume II)";
 
     public static void main (String[] args)
@@ -46,12 +46,16 @@ public class Main
                         case CD_III:
                             addChapterNumbersCD_III(tocFile);
                             break;
+                        case EXP:
+                            fixIndex(tocFile);
+                            fixAllPageTitles(oebpsPath, "EXP-epub");
+                            break;
                         case IJ:
                             addChapterNumbersInfancia(tocFile);
                             break;
                         case MP:
                             fixIndex(tocFile);
-                            fixAllPageTitlesMP(oebpsPath);
+                            fixAllPageTitles(oebpsPath, "MP-epub");
                             break;
                         case RB_II:
                             addChapterNumbersBlumII(tocFile);
@@ -83,18 +87,18 @@ public class Main
         }
     }
 
-    private static void fixAllPageTitlesMP (Path oebpsPath)
+    private static void fixAllPageTitles (Path oebpsPath, String id)
     {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(oebpsPath))
         {
             for (Path chapterFile : stream)
             {
-                if (chapterFile.getFileName().toString().startsWith("MP-epub"))
+                if (chapterFile.getFileName().toString().startsWith(id))
                 {
                     String inputLine;
                     StringBuilder sb = new StringBuilder();
-                    try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(chapterFile
-                            .toFile()), "UTF8")))
+                    FileInputStream fis = new FileInputStream(chapterFile.toFile());
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis, "UTF8")))
                     {
                         while ((inputLine = in.readLine()) != null)
                         {
@@ -289,7 +293,6 @@ public class Main
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
-        int cap = 1;
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
         {
             while ((inputLine = in.readLine()) != null)
@@ -472,5 +475,4 @@ public class Main
         }
         return footNoteCount;
     }
-
 }
