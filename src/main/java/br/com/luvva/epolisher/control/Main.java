@@ -2,20 +2,24 @@ package br.com.luvva.epolisher.control;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
- * @author Lima Filho, A. L. - amsterdam@luvva.com.br
+ * @author Lima Filho, A. L. - amsterdamluis.40@gmail.com
  */
 public class Main
 {
     private static final String CD_I   = "A Criação de Deus (Volume I)";
     private static final String CD_III = "A Criação de Deus (Volume III)";
+    private static final String EXP    = "Explicações de Textos das Escrituras Sagradas";
     private static final String IJ     = "A Infância de Jesus";
     private static final String MP     = "Mensagens do Pai";
-    private static final String EXP    = "Explicações de Textos das Escrituras Sagradas";
+    private static final String PS     = "Prédicas do Senhor";
     private static final String RB_II  = "Roberto Blum (Volume II)";
 
     public static void main (String[] args)
@@ -56,6 +60,9 @@ public class Main
                         case MP:
                             fixIndex(tocFile);
                             fixAllPageTitles(oebpsPath, "MP-epub");
+                            break;
+                        case PS:
+                            fixIndexPs(tocFile);
                             break;
                         case RB_II:
                             addChapterNumbersBlumII(tocFile);
@@ -98,7 +105,7 @@ public class Main
                     String inputLine;
                     StringBuilder sb = new StringBuilder();
                     FileInputStream fis = new FileInputStream(chapterFile.toFile());
-                    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis, "UTF8")))
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis, UTF_8)))
                     {
                         while ((inputLine = in.readLine()) != null)
                         {
@@ -173,7 +180,7 @@ public class Main
     private static String getBookTitle (File tocFile) throws Exception
     {
         String inputLine;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -239,7 +246,7 @@ public class Main
         String inputLine;
         StringBuilder sb = new StringBuilder();
         int cap = 1;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -267,7 +274,7 @@ public class Main
         String inputLine;
         StringBuilder sb = new StringBuilder();
         int cap = 1;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -293,7 +300,7 @@ public class Main
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -313,12 +320,38 @@ public class Main
         }
     }
 
+    private static void fixIndexPs (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
+        {
+            int counter = 0;
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest") && !inputLine.contains("EPÍLOGO"))
+                {
+                    counter++;
+                    sb.append(inputLine.replaceAll("\">(.+)</a>", "\">" + counter + ". $1</a>")).append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
     private static void addChapterNumbersInfancia (File tocFile) throws Exception
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
         int cap = 1;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -345,7 +378,7 @@ public class Main
         String inputLine;
         StringBuilder sb = new StringBuilder();
         int cap = 151;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -371,7 +404,7 @@ public class Main
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
@@ -399,7 +432,7 @@ public class Main
         private final List<Path> paths = new ArrayList<>();
 
         @Override
-        public FileVisitResult visitFile (Path path, BasicFileAttributes attrs) throws IOException
+        public FileVisitResult visitFile (Path path, BasicFileAttributes attrs)
         {
             if (!attrs.isDirectory() && path.toString().toLowerCase().endsWith(".xhtml"))
             {
@@ -410,7 +443,7 @@ public class Main
 
         private List<Path> getSortedPaths ()
         {
-            Collections.sort(paths, new ChapterFileSorter());
+            paths.sort(new ChapterFileSorter());
             return paths;
         }
     }
@@ -440,7 +473,7 @@ public class Main
     {
         String inputLine;
         StringBuilder sb = new StringBuilder();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()), "UTF8")))
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(path.toFile()), UTF_8)))
         {
             while ((inputLine = in.readLine()) != null)
             {
