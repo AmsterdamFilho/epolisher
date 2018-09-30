@@ -17,6 +17,7 @@ public class Main
     private static final String CD_I   = "A Criação de Deus (Volume I)";
     private static final String CD_III = "A Criação de Deus (Volume III)";
     private static final String EXP    = "Explicações de Textos das Escrituras Sagradas";
+    private static final String GEJ_I  = "O Grande Evangelho de João (Volume I)";
     private static final String IJ     = "A Infância de Jesus";
     private static final String MP     = "Mensagens do Pai";
     private static final String PS     = "Prédicas do Senhor";
@@ -53,6 +54,9 @@ public class Main
                         case EXP:
                             fixIndex(tocFile);
                             fixAllPageTitles(oebpsPath, "EXP-epub");
+                            break;
+                        case GEJ_I:
+                            addChapterNumbersGejI(tocFile);
                             break;
                         case IJ:
                             addChapterNumbersInfancia(tocFile);
@@ -360,6 +364,32 @@ public class Main
                     sb.append(inputLine.replaceAll("idParaDest-([0-9]+)\">", "idParaDest\\-$1\">" + String.valueOf
                             (cap++) + ". "))
                             .append("\n");
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
+    private static void addChapterNumbersGejI (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest") && !inputLine.contains("Prefácio")
+                        && !inputLine.contains("Natureza e s"))
+                {
+                    sb.append(inputLine.replace("\">", "\">" + ++i + ". ")).append("\n");
                 }
                 else
                 {
