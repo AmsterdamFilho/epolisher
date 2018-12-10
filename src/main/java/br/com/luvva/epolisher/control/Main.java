@@ -2,7 +2,6 @@ package br.com.luvva.epolisher.control;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -22,6 +21,7 @@ public class Main
     private static final String MP     = "Mensagens do Pai";
     private static final String PS     = "Prédicas do Senhor";
     private static final String RB_II  = "Roberto Blum (Volume II)";
+    private static final String TL     = "A Terra e a Lua";
 
     public static void main (String[] args)
     {
@@ -70,6 +70,9 @@ public class Main
                             break;
                         case RB_II:
                             addChapterNumbersBlumII(tocFile);
+                            break;
+                        case TL:
+                            fixIndexTL(tocFile);
                             break;
                         default:
                             addChapterNumbers(tocFile);
@@ -324,6 +327,33 @@ public class Main
         }
     }
 
+    private static void fixIndexTL (File tocFile) throws Exception
+    {
+        String inputLine;
+        StringBuilder sb = new StringBuilder();
+        int idCap = 0;
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(tocFile), UTF_8)))
+        {
+            while ((inputLine = in.readLine()) != null)
+            {
+                if (inputLine.contains("idParaDest"))
+                {
+                    String fix = getCapFromIdTL(idCap);
+                    sb.append(inputLine.replace("\">", "\">" + fix)).append("\n");
+                    idCap++;
+                }
+                else
+                {
+                    sb.append(inputLine).append("\n");
+                }
+            }
+        }
+        try (BufferedWriter bw = Files.newBufferedWriter(tocFile.toPath()))
+        {
+            bw.write(sb.toString());
+        }
+    }
+
     private static void fixIndexPs (File tocFile) throws Exception
     {
         String inputLine;
@@ -537,5 +567,37 @@ public class Main
             bw.write(sb.toString());
         }
         return footNoteCount;
+    }
+
+    private static String getCapFromIdTL (int id)
+    {
+        if (id == 0)
+        {
+            return "";
+        }
+        else if (id > 0 && id < 47)
+        {
+            return id + ". ";
+        }
+        else if (id == 47)
+        {
+            return "47 e 48. ";
+        }
+        else if (id > 47 && id < 67)
+        {
+            return (id + 1) + ". ";
+        }
+        else if (id == 67)
+        {
+            return "68 e 69. ";
+        }
+        else if (id > 67 && id < 72)
+        {
+            return (id + 2) + ". ";
+        }
+        else
+        {
+            return (id - 71) + ". ";
+        }
     }
 }
