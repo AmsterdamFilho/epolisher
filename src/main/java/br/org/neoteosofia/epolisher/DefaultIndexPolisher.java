@@ -13,9 +13,6 @@ import java.util.List;
 import static br.org.neoteosofia.epolisher.Epub.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * @author Amsterdam Luís
- */
 public class DefaultIndexPolisher implements IndexPolisher
 {
     private @Inject Epub epub;
@@ -39,7 +36,8 @@ public class DefaultIndexPolisher implements IndexPolisher
                 return;
             case EXP:
             case MP:
-                chapterValidator = new DefaultChapterValidator() {
+                chapterValidator = new DefaultChapterValidator()
+                {
                     @Override
                     public String regex ()
                     {
@@ -51,6 +49,10 @@ public class DefaultIndexPolisher implements IndexPolisher
             case GEJ_I:
                 chapterValidator.addAll("Prefácio", "Natureza e signi");
                 chapterResolver = new DefaultChapterResolver();
+                break;
+            case GEJ_X:
+                chapterValidator.addAll("O GRANDE EVANGELHO", "EPÍLOGO");
+                chapterResolver = new GejXChapterResolver();
                 break;
             case IJ:
                 chapterValidator.addAll("Preâmbulo");
@@ -118,7 +120,7 @@ public class DefaultIndexPolisher implements IndexPolisher
         }
     }
 
-    private class DefaultChapterResolver implements ChapterResolver
+    private static class DefaultChapterResolver implements ChapterResolver
     {
         private int offset;
 
@@ -139,7 +141,23 @@ public class DefaultIndexPolisher implements IndexPolisher
         }
     }
 
-    private class TLChapterResolver implements ChapterResolver
+    private static class GejXChapterResolver implements ChapterResolver
+    {
+        @Override
+        public String resolve (int chapter)
+        {
+            if (chapter <= 244)
+            {
+                return String.valueOf(chapter);
+            }
+            else
+            {
+                return String.valueOf((chapter - 244));
+            }
+        }
+    }
+
+    private static class TLChapterResolver implements ChapterResolver
     {
         @Override
         public String resolve (int chapter)
@@ -171,7 +189,7 @@ public class DefaultIndexPolisher implements IndexPolisher
         }
     }
 
-    private class DefaultChapterValidator implements ChapterValidator
+    private static class DefaultChapterValidator implements ChapterValidator
     {
         private List<String> ignoredChapters = new ArrayList<>();
 

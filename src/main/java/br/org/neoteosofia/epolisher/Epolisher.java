@@ -8,14 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/**
- * @author Lima Filho, A. L. - amsterdamluis.40@gmail.com
- */
 public class Epolisher
 {
-    private @Inject IndexPolisher       indexPolisher;
+    private @Inject IndexPolisher indexPolisher;
     private @Inject PagesTitlesPolisher pagesTitlesPolisher;
-    private @Inject FootnotePolisher    footnotePolisher;
+    private @Inject FootnotePolisher footnotePolisher;
 
     public static void main (String[] args)
     {

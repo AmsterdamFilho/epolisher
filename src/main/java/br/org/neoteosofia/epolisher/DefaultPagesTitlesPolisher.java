@@ -9,9 +9,6 @@ import java.util.Objects;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * @author Amsterdam Luís
- */
 public class DefaultPagesTitlesPolisher implements PagesTitlesPolisher
 {
     private @Inject Epub epub;

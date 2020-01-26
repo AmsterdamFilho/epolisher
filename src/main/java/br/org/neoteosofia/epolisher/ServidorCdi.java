@@ -5,9 +5,6 @@ import org.jboss.weld.environment.se.WeldContainer;
 
 import java.lang.annotation.Annotation;
 
-/**
- * @author Amsterdam Luís
- */
 class ServidorCdi
 {
     private static final ServidorCdi instance = new ServidorCdi();

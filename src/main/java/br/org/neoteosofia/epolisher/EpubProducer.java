@@ -12,9 +12,6 @@ import java.nio.file.Paths;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * @author Amsterdam Luís
- */
 @Singleton
 public class EpubProducer
 {

@@ -13,9 +13,6 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-/**
- * @author Amsterdam Luís
- */
 public class FootnotePolisher
 {
     private @Inject Epub epub;
@@ -51,12 +48,12 @@ public class FootnotePolisher
                 {
                     if (inputLine.contains("</a>. "))
                     {
-                        sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount)));
+                        sb.append(inputLine.replace("</a>", "</a>" + ++footNoteCount));
                         sb.append("\n");
                     }
                     else
                     {
-                        sb.append(inputLine.replace("</a>", "</a>" + String.valueOf(++footNoteCount) + ". "));
+                        sb.append(inputLine.replace("</a>", "</a>" + ++footNoteCount + ". "));
                         sb.append("\n");
                     }
                 }
@@ -73,7 +70,7 @@ public class FootnotePolisher
         return footNoteCount;
     }
 
-    private class FootnoteFileVisitor extends SimpleFileVisitor<Path>
+    private static class FootnoteFileVisitor extends SimpleFileVisitor<Path>
     {
         private final List<Path> paths = new ArrayList<>();
 
@@ -94,7 +91,7 @@ public class FootnotePolisher
         }
     }
 
-    private class ChapterFileSorter implements Comparator<Path>
+    private static class ChapterFileSorter implements Comparator<Path>
     {
         @Override
         public int compare (Path o1, Path o2)
@@ -108,7 +105,7 @@ public class FootnotePolisher
             name = name.replace(".xhtml", "");
             if (name.matches(".+-[0-9]+"))
             {
-                return Integer.valueOf(name.substring(name.lastIndexOf('-') + 1));
+                return Integer.parseInt(name.substring(name.lastIndexOf('-') + 1));
             }
             return 0;
         }
