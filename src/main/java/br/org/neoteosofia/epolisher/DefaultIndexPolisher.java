@@ -13,17 +13,15 @@ import java.util.List;
 import static br.org.neoteosofia.epolisher.Epub.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class DefaultIndexPolisher implements IndexPolisher
-{
+public class DefaultIndexPolisher implements IndexPolisher {
+
     private @Inject Epub epub;
 
     @Override
-    public void start () throws IOException
-    {
+    public void start() throws IOException {
         DefaultChapterValidator chapterValidator = new DefaultChapterValidator();
         ChapterResolver chapterResolver;
-        switch (epub.title())
-        {
+        switch (epub.title()) {
             case CD_I:
                 chapterValidator.addAll("PRÓLOGO DO SENHOR", "APÊNDICE");
                 chapterResolver = new DefaultChapterResolver();
@@ -36,11 +34,9 @@ public class DefaultIndexPolisher implements IndexPolisher
                 return;
             case EXP:
             case MP:
-                chapterValidator = new DefaultChapterValidator()
-                {
+                chapterValidator = new DefaultChapterValidator() {
                     @Override
-                    public String regex ()
-                    {
+                    public String regex() {
                         return "idParaDest-([0-9]+)\">– [0-9]+ –";
                     }
                 };
@@ -75,137 +71,101 @@ public class DefaultIndexPolisher implements IndexPolisher
         start(chapterResolver, chapterValidator);
     }
 
-    private void start (ChapterResolver chapterResolver, ChapterValidator chapterValidator) throws IOException
-    {
+    private void start(ChapterResolver chapterResolver, ChapterValidator chapterValidator) throws IOException {
         String regex = chapterValidator.regex();
         String replacement = "idParaDest\\-$1\">%. ";
         String inputLine;
         StringBuilder sb = new StringBuilder();
         int chapter = 1;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(Files.newInputStream(epub.toc()), UTF_8)))
-        {
-            while ((inputLine = in.readLine()) != null)
-            {
-                if (inputLine.contains("idParaDest") && chapterValidator.validate(inputLine))
-                {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(Files.newInputStream(epub.toc()), UTF_8))) {
+            while ((inputLine = in.readLine()) != null) {
+                if (inputLine.contains("idParaDest") && chapterValidator.validate(inputLine)) {
                     String chapterResolved = chapterResolver.resolve(chapter);
                     sb.append(inputLine.replaceAll(regex, replacement.replace("%", chapterResolved)));
                     sb.append("\n");
                     chapter++;
-                }
-                else
-                {
+                } else {
                     sb.append(inputLine).append("\n");
                 }
             }
         }
-        try (BufferedWriter bw = Files.newBufferedWriter(epub.toc()))
-        {
+        try (BufferedWriter bw = Files.newBufferedWriter(epub.toc())) {
             bw.write(sb.toString());
         }
     }
 
-    private interface ChapterResolver
-    {
-        String resolve (int chapter);
+    private interface ChapterResolver {
+        String resolve(int chapter);
     }
 
-    private interface ChapterValidator
-    {
-        boolean validate (String inputLine);
+    private interface ChapterValidator {
+        boolean validate(String inputLine);
 
-        default String regex ()
-        {
+        default String regex() {
             return "idParaDest-([0-9]+)\">";
         }
     }
 
-    private static class DefaultChapterResolver implements ChapterResolver
-    {
-        private int offset;
+    private static class DefaultChapterResolver implements ChapterResolver {
+        private final int offset;
 
-        private DefaultChapterResolver ()
-        {
+        private DefaultChapterResolver() {
             offset = 0;
         }
 
-        private DefaultChapterResolver (int offset)
-        {
+        private DefaultChapterResolver(int offset) {
             this.offset = offset;
         }
 
         @Override
-        public String resolve (int chapter)
-        {
+        public String resolve(int chapter) {
             return String.valueOf(chapter + offset);
         }
     }
 
-    private static class GejXChapterResolver implements ChapterResolver
-    {
+    private static class GejXChapterResolver implements ChapterResolver {
         @Override
-        public String resolve (int chapter)
-        {
-            if (chapter <= 244)
-            {
+        public String resolve(int chapter) {
+            if (chapter <= 244) {
                 return String.valueOf(chapter);
-            }
-            else
-            {
+            } else {
                 return String.valueOf((chapter - 244));
             }
         }
     }
 
-    private static class TLChapterResolver implements ChapterResolver
-    {
+    private static class TLChapterResolver implements ChapterResolver {
         @Override
-        public String resolve (int chapter)
-        {
-            if (chapter < 47)
-            {
+        public String resolve(int chapter) {
+            if (chapter < 47) {
                 return String.valueOf(chapter);
-            }
-            else if (chapter == 47)
-            {
+            } else if (chapter == 47) {
                 return "47 e 48";
-            }
-            else if (chapter < 67)
-            {
+            } else if (chapter < 67) {
                 return String.valueOf((chapter + 1));
-            }
-            else if (chapter == 67)
-            {
+            } else if (chapter == 67) {
                 return "68 e 69";
-            }
-            else if (chapter < 72)
-            {
+            } else if (chapter < 72) {
                 return String.valueOf((chapter + 2));
-            }
-            else
-            {
+            } else {
                 return String.valueOf((chapter - 71));
             }
         }
     }
 
-    private static class DefaultChapterValidator implements ChapterValidator
-    {
-        private List<String> ignoredChapters = new ArrayList<>();
+    private static class DefaultChapterValidator implements ChapterValidator {
+        private final List<String> ignoredChapters = new ArrayList<>();
 
-        public DefaultChapterValidator ()
-        {
+        public DefaultChapterValidator() {
             ignoredChapters.add("Copyright");
         }
 
-        private void addAll (String... ignoredChapters)
-        {
+        private void addAll(String... ignoredChapters) {
             Collections.addAll(this.ignoredChapters, ignoredChapters);
         }
 
         @Override
-        public boolean validate (String inputLine)
-        {
+        public boolean validate(String inputLine) {
             return ignoredChapters.stream().noneMatch(inputLine::contains);
         }
     }

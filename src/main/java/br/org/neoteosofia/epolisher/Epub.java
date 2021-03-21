@@ -2,8 +2,8 @@ package br.org.neoteosofia.epolisher;
 
 import java.nio.file.Path;
 
-public interface Epub
-{
+public interface Epub {
+
     String CD_I = "A Criação de Deus (Volume I)";
     String CD_III = "A Criação de Deus (Volume III)";
     String D = "O Decálogo";
@@ -16,9 +16,9 @@ public interface Epub
     String RB_II = "Roberto Blum (Volume II)";
     String TL = "A Terra e a Lua";
 
-    Path oebps ();
+    Path oebps();
 
-    Path toc ();
+    Path toc();
 
-    String title ();
+    String title();
 }

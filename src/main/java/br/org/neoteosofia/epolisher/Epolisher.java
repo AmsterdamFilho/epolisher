@@ -8,35 +8,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class Epolisher
-{
+public class Epolisher {
+
     private @Inject IndexPolisher indexPolisher;
     private @Inject PagesTitlesPolisher pagesTitlesPolisher;
     private @Inject FootnotePolisher footnotePolisher;
 
-    public static void main (String[] args)
-    {
-        try
-        {
-            ServidorCdi.getServidor().instanciar(Epolisher.class).start();
-        }
-        catch (Exception ex)
-        {
+    public static void main(String[] args) {
+        try {
+            CdiContainer.get().getInstance(Epolisher.class).start();
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, ex.getMessage());
             Path log = Paths.get(System.getProperty("user.home")).resolve("Desktop").resolve("epolisherLog.log");
-            try
-            {
+            try {
                 ex.printStackTrace(new PrintStream(Files.newOutputStream(log)));
-            }
-            catch (IOException e)
-            {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private void start () throws IOException
-    {
+    private void start() throws IOException {
         indexPolisher.start();
         pagesTitlesPolisher.start();
         footnotePolisher.start();

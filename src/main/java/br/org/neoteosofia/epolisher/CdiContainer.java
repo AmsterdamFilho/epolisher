@@ -5,25 +5,22 @@ import org.jboss.weld.environment.se.WeldContainer;
 
 import java.lang.annotation.Annotation;
 
-class ServidorCdi
-{
-    private static final ServidorCdi instance = new ServidorCdi();
+class CdiContainer {
+
+    private static final CdiContainer instance = new CdiContainer();
 
     private final WeldContainer container;
 
-    private ServidorCdi ()
-    {
+    private CdiContainer() {
         Weld weld = new Weld();
         this.container = weld.initialize();
     }
 
-    static ServidorCdi getServidor ()
-    {
+    static CdiContainer get() {
         return instance;
     }
 
-    <T> T instanciar (Class<T> type, Annotation... qualifiers)
-    {
+    <T> T getInstance(Class<T> type, Annotation... qualifiers) {
         return container.select(type, qualifiers).get();
     }
 }

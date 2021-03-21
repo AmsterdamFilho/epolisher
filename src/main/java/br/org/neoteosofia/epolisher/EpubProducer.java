@@ -13,61 +13,44 @@ import java.nio.file.Paths;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Singleton
-public class EpubProducer
-{
+public class EpubProducer {
+
     private Epub epub;
 
     @PostConstruct
-    private void init ()
-    {
+    private void init() {
         String property = System.getProperty("epub");
-        if (property == null || property.trim().isEmpty())
-        {
+        if (property == null || property.trim().isEmpty()) {
             throw new RuntimeException("Please specify Epub directory for polishment!");
-        }
-        else
-        {
+        } else {
             Path epubPath = Paths.get(property);
-            if (!Files.exists(epubPath))
-            {
+            if (!Files.exists(epubPath)) {
                 throw new RuntimeException("Specified Epub directory does not exist!");
-            }
-            else if (!Files.isDirectory(epubPath))
-            {
+            } else if (!Files.isDirectory(epubPath)) {
                 throw new RuntimeException("Choose Epub directory, not a file!");
-            }
-            else
-            {
+            } else {
                 Path oebps = epubPath.resolve("OEBPS");
-                if (!(Files.exists(oebps) && Files.isDirectory(oebps)))
-                {
+                if (!(Files.exists(oebps) && Files.isDirectory(oebps))) {
                     throw new RuntimeException("OEBPS directory could not be resolved!");
-                }
-                else
-                {
+                } else {
                     Path toc = oebps.resolve("toc.xhtml");
-                    if (!(Files.exists(toc) && Files.isRegularFile(toc)))
-                    {
+                    if (!(Files.exists(toc) && Files.isRegularFile(toc))) {
                         throw new RuntimeException("toc.xhtml file could not be resolved!");
                     }
                     String title = getTitle(toc);
-                    epub = new Epub()
-                    {
+                    epub = new Epub() {
                         @Override
-                        public Path oebps ()
-                        {
+                        public Path oebps() {
                             return oebps;
                         }
 
                         @Override
-                        public Path toc ()
-                        {
+                        public Path toc() {
                             return toc;
                         }
 
                         @Override
-                        public String title ()
-                        {
+                        public String title() {
                             return title;
                         }
                     };
@@ -76,17 +59,12 @@ public class EpubProducer
         }
     }
 
-    private String getTitle (Path toc)
-    {
-        try
-        {
+    private String getTitle(Path toc) {
+        try {
             String inputLine;
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(Files.newInputStream(toc), UTF_8)))
-            {
-                while ((inputLine = in.readLine()) != null)
-                {
-                    if (inputLine.matches("\t\t<title>.+</title>"))
-                    {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(Files.newInputStream(toc), UTF_8))) {
+                while ((inputLine = in.readLine()) != null) {
+                    if (inputLine.matches("\t\t<title>.+</title>")) {
                         return
                                 inputLine.
                                         replace("</title>", "").
@@ -97,16 +75,13 @@ public class EpubProducer
                 }
             }
             throw new RuntimeException("Could not find book's title!");
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
     }
 
     @Produces
-    private Epub produce ()
-    {
+    private Epub produce() {
         return epub;
     }
 }
