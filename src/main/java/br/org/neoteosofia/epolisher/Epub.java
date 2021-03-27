@@ -11,6 +11,7 @@ public interface Epub {
     String GEJ_I = "O Grande Evangelho de João (Volume I)";
     String GEJ_X = "O Grande Evangelho de João (Volumes X e XI)";
     String IJ = "A Infância de Jesus";
+    String M = "A Mosca";
     String MP = "Mensagens do Pai";
     String PS = "Prédicas do Senhor";
     String RB_II = "Roberto Blum (Volume II)";

@@ -30,6 +30,10 @@ public class DefaultIndexPolisher implements IndexPolisher {
                 chapterValidator.addAll("ANEXO – A FORMAÇÃO");
                 chapterResolver = new DefaultChapterResolver();
                 break;
+            case M:
+                chapterValidator.addAll("Prólogo do Senhor");
+                chapterResolver = new DefaultChapterResolver();
+                break;
             case D:
                 return;
             case EXP:
